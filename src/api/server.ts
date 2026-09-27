@@ -1,14 +1,20 @@
 import { http, HttpResponse } from 'msw'
-import { setupServer } from 'msw/native'
+import { setupWorker } from 'msw/browser'
 import { factory, primaryKey, manyOf, oneOf } from '@mswjs/data'
 
 /* ------------------ Data Model ------------------ */
 
 export const db = factory({
+  task: {
+    id: primaryKey(Number),
+    title: String,
+    todos: manyOf('todo'),
+  },
   todo: {
     id: primaryKey(Number),
     title: String,
     items: manyOf('item'),
+    task: oneOf('task'),
   },
   item: {
     id: primaryKey(Number),
@@ -17,18 +23,102 @@ export const db = factory({
   },
 })
 
-/* ------------------ Seed Data ------------------ */
+/* ------------------ Seed Data (از JSON ثابت) ------------------ */
 
-let todoIdCounter = 1
-let itemIdCounter = 11
+const initialTasks = [
+  {
+    id: 14,
+    title: 'task 1',
+    todos: [
+      {
+        id: 5711,
+        title: 'todo 1',
+        items: [
+          { id: 117571, description: 'work 1' },
+          { id: 1175711, description: 'work 2' },
+        ],
+      },
+      {
+        id: 111157571,
+        title: 'todo 2',
+        items: [
+          { id: 111571111, description: 'work 3' },
+          { id: 1111571111, description: 'work 4' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 57775,
+    title: 'task 2',
+    todos: [
+      {
+        id: 22575,
+        title: 'todo 1',
+        items: [
+          { id: 117572, description: 'work 1' },
+          { id: 1757522, description: 'work 2' },
+        ],
+      },
+      {
+        id: 275753,
+        title: 'todo 2',
+        items: [
+          { id: 237552, description: 'work 3' },
+          { id: 375723, description: 'work 4' },
+        ],
+      },
+    ],
+  },
+]
 
-const todo1 = db.todo.create({ id: todoIdCounter++, title: 'Todo' })
-db.item.create({ id: itemIdCounter++, description: 'work 1', todo: todo1 })
-db.item.create({ id: itemIdCounter++, description: 'work 2', todo: todo1 })
+/* ------------------ Seed DB ------------------ */
 
-const todo2 = db.todo.create({ id: todoIdCounter++, title: 'Todo 2' })
-db.item.create({ id: itemIdCounter++, description: 'work 3', todo: todo2 })
-db.item.create({ id: itemIdCounter++, description: 'work 4', todo: todo2 })
+function seedDB() {
+  for (const taskData of initialTasks) {
+    const task = db.task.create({
+      id: taskData.id,
+      title: taskData.title,
+    })
+
+    const todos: ReturnType<typeof db.todo.create>[] = []
+
+    for (const todoData of taskData.todos) {
+      const todo = db.todo.create({
+        id: todoData.id,
+        title: todoData.title,
+        task,
+      })
+
+      const items: ReturnType<typeof db.item.create>[] = []
+
+      for (const itemData of todoData.items) {
+        const item = db.item.create({
+          id: itemData.id,
+          description: itemData.description,
+          todo,
+        })
+        items.push(item)
+      }
+
+      // 👇 رابطه‌ی manyOf رو دستی پر کن
+      db.todo.update({
+        where: { id: { equals: todo.id } },
+        data: { items },
+      })
+
+      todos.push(todo)
+    }
+
+    // 👇 رابطه‌ی manyOf رو دستی پر کن
+    db.task.update({
+      where: { id: { equals: task.id } },
+      data: { todos },
+    })
+  }
+}
+
+seedDB()
 
 /* ------------------ Helpers ------------------ */
 
@@ -38,85 +128,41 @@ function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-type TodoModel = ReturnType<typeof db.todo.create>
+type TaskModel = ReturnType<typeof db.task.create>
 
-const serializeTodo = (todo: TodoModel) => ({
-  id: todo.id,
-  title: todo.title,
-  items: todo.items.map((item) => ({
-    id: item.id,
-    description: item.description,
+const serializeTask = (task: TaskModel) => ({
+  id: task.id,
+  title: task.title,
+  todos: task.todos.map((todo) => ({
+    id: todo.id,
+    title: todo.title,
+    items: todo.items.map((item) => ({
+      id: item.id,
+      description: item.description,
+    })),
   })),
 })
 
 /* ------------------ Handlers ------------------ */
 
 export const handlers = [
-  http.get('/fakeApi/todos', async () => {
-    const todos = db.todo.getAll().map(serializeTodo)
+  // دریافت همه‌ی Task ها
+  http.get('/fakeApi/tasks', async () => {
+    const tasks = db.task.getAll().map(serializeTask)
     await delay(ARTIFICIAL_DELAY_MS)
-    return HttpResponse.json(todos)
+    return HttpResponse.json(tasks)
   }),
 
-  http.get('/fakeApi/todos/:todoId', async ({ params }) => {
-    const todoId = Number(params.todoId)
-    const todo = db.todo.findFirst({ where: { id: { equals: todoId } } })
-    if (!todo) return new HttpResponse(null, { status: 404 })
+  // دریافت یک Task خاص
+  http.get('/fakeApi/tasks/:taskId', async ({ params }) => {
+    const taskId = Number(params.taskId)
+    const task = db.task.findFirst({ where: { id: { equals: taskId } } })
+    if (!task) return new HttpResponse(null, { status: 404 })
     await delay(ARTIFICIAL_DELAY_MS)
-    return HttpResponse.json(serializeTodo(todo))
-  }),
-
-  http.post('/fakeApi/todos', async ({ request }) => {
-    const data = (await request.json()) as {
-      title: string
-      items?: { description: string }[]
-    }
-
-    const newTodo = db.todo.create({
-      id: todoIdCounter++,
-      title: data.title,
-    })
-
-    // فقط آیتم‌ها رو create کن؛ رابطه‌ی manyOf خودکار پر میشه
-    for (const item of data.items ?? []) {
-      db.item.create({
-        id: itemIdCounter++,
-        description: item.description,
-        todo: newTodo,
-      })
-    }
-
-    // از DB دوباره بخون تا items تازه پر شده رو بگیری
-    const saved = db.todo.findFirst({
-      where: { id: { equals: newTodo.id } },
-    })!
-
-    await delay(ARTIFICIAL_DELAY_MS)
-    return HttpResponse.json(serializeTodo(saved), { status: 201 })
-  }),
-
-  http.post('/fakeApi/todos/:todoId/items', async ({ request, params }) => {
-    const todoId = Number(params.todoId)
-    const data = (await request.json()) as { description: string }
-
-    const todo = db.todo.findFirst({ where: { id: { equals: todoId } } })
-    if (!todo) return new HttpResponse(null, { status: 404 })
-
-    db.item.create({
-      id: itemIdCounter++,
-      description: data.description,
-      todo,
-    })
-
-    const updated = db.todo.findFirst({
-      where: { id: { equals: todoId } },
-    })!
-
-    await delay(ARTIFICIAL_DELAY_MS)
-    return HttpResponse.json(serializeTodo(updated), { status: 201 })
+    return HttpResponse.json(serializeTask(task))
   }),
 ]
 
 /* ------------------ Server ------------------ */
 
-export const worker = setupServer(...handlers)
+export const worker = setupWorker(...handlers)

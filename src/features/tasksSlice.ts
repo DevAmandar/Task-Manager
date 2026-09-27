@@ -1,0 +1,70 @@
+import { createAsyncThunk, createEntityAdapter, createSlice, type EntityState } from "@reduxjs/toolkit"
+import { client } from "../api/client"
+import type { RootState } from "../app/store"
+import { createAppAsyncThunk } from "../app/createAppAsyncThunk"
+
+
+export interface TodoItem {
+  id: number
+  description: string
+}
+
+export interface Todo {
+  id: number
+  title: string
+  items: TodoItem[]
+}
+
+export interface Task {
+  id: number
+  title: string
+  todos: Todo[]
+}
+
+export const fetchTasks = createAppAsyncThunk('tasks/fetchTasks', async () => {
+  const response = await client.get<Task[]>('/fakeApi/tasks')
+  return response.data
+})
+
+interface TasksState extends EntityState<Task, number> {
+  status: 'idle' | 'pending' | 'succeeded' | 'rejected'
+  error: string | null
+}
+
+const tasksAdapter = createEntityAdapter<Task>({})
+
+const initialState: TasksState = tasksAdapter.getInitialState({
+  status: 'idle',
+  error: null,
+})
+
+const todosSlice = createSlice({
+  name: 'tasks',
+  initialState,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchTasks.pending, (state, action) => {
+        state.status = 'pending'
+      })
+      .addCase(fetchTasks.fulfilled, (state, action) => {
+        state.status = 'succeeded'
+        // Save the fetched posts into state
+        tasksAdapter.setAll(state, action.payload)
+      })
+      .addCase(fetchTasks.rejected, (state, action) => {
+        state.status = 'rejected'
+        state.error = action.error.message ?? 'Unknown Error'
+      })
+  },
+})
+
+export const selectTodosStatus = (state: RootState) => state.tasks.status
+
+export const {
+  selectAll: selectAllTodos,
+  selectById: selectTodoById,
+  selectIds: selectTodoIds,
+} = tasksAdapter.getSelectors((state: RootState) => state.tasks)
+
+export default todosSlice.reducer
