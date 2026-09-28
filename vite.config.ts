@@ -8,5 +8,6 @@ export default defineConfig({
     react(),
     babel({ presets: [reactCompilerPreset()] })
   ],
-  base: '/'
+  base: '/Task-Manager/',
+  publicDir: 'public', 
 })

@@ -2,6 +2,12 @@ import { http, HttpResponse } from 'msw'
 import { setupWorker } from 'msw/browser'
 import { factory, primaryKey, manyOf, oneOf } from '@mswjs/data'
 
+/* ------------------ API Base ------------------ */
+
+// در dev: '/'  →  '/fakeApi/tasks'
+// در GitHub Pages: '/Task-Manager/'  →  '/Task-Manager/fakeApi/tasks'
+const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, '')
+
 /* ------------------ Data Model ------------------ */
 
 export const db = factory({
@@ -27,45 +33,45 @@ export const db = factory({
 
 const initialTasks = [
   {
-    id: 14,
+    id: 111,
     title: 'task 1',
     todos: [
       {
-        id: 5711,
+        id: 1,
         title: 'todo 1',
         items: [
-          { id: 117571, description: 'work 1' },
-          { id: 1175711, description: 'work 2' },
+          { id: 11, description: 'work 1' },
+          { id: 12, description: 'work 2' },
         ],
       },
       {
-        id: 111157571,
+        id: 2,
         title: 'todo 2',
         items: [
-          { id: 111571111, description: 'work 3' },
-          { id: 1111571111, description: 'work 4' },
+          { id: 22, description: 'work 3' },
+          { id: 23, description: 'work 4' },
         ],
       },
     ],
   },
   {
-    id: 57775,
+    id: 222,
     title: 'task 2',
     todos: [
       {
-        id: 22575,
+        id: 3,   // 👈 یکتا (نه 1)
         title: 'todo 1',
         items: [
-          { id: 117572, description: 'work 1' },
-          { id: 1757522, description: 'work 2' },
+          { id: 31, description: 'work 1' },   // 👈 یکتا (نه 11)
+          { id: 32, description: 'work 2' },
         ],
       },
       {
-        id: 275753,
+        id: 4,   // 👈 یکتا (نه 2)
         title: 'todo 2',
         items: [
-          { id: 237552, description: 'work 3' },
-          { id: 375723, description: 'work 4' },
+          { id: 33, description: 'work 3' },
+          { id: 34, description: 'work 4' },
         ],
       },
     ],
@@ -101,7 +107,7 @@ function seedDB() {
         items.push(item)
       }
 
-      // 👇 رابطه‌ی manyOf رو دستی پر کن
+      // رابطه‌ی manyOf رو دستی پر کن
       db.todo.update({
         where: { id: { equals: todo.id } },
         data: { items },
@@ -110,7 +116,7 @@ function seedDB() {
       todos.push(todo)
     }
 
-    // 👇 رابطه‌ی manyOf رو دستی پر کن
+    // رابطه‌ی manyOf رو دستی پر کن
     db.task.update({
       where: { id: { equals: task.id } },
       data: { todos },
@@ -147,14 +153,14 @@ const serializeTask = (task: TaskModel) => ({
 
 export const handlers = [
   // دریافت همه‌ی Task ها
-  http.get('/fakeApi/tasks', async () => {
+  http.get(`${API_BASE}/fakeApi/tasks`, async () => {
     const tasks = db.task.getAll().map(serializeTask)
     await delay(ARTIFICIAL_DELAY_MS)
     return HttpResponse.json(tasks)
   }),
 
   // دریافت یک Task خاص
-  http.get('/fakeApi/tasks/:taskId', async ({ params }) => {
+  http.get(`${API_BASE}/fakeApi/tasks/:taskId`, async ({ params }) => {
     const taskId = Number(params.taskId)
     const task = db.task.findFirst({ where: { id: { equals: taskId } } })
     if (!task) return new HttpResponse(null, { status: 404 })

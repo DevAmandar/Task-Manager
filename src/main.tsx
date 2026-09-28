@@ -2,14 +2,18 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
-import { worker } from './api/server'
 import { Provider } from 'react-redux'
 import { store } from './app/store.ts'
 
 async function enableMocking() {
-  if (import.meta.env.DEV) {
-    return worker.start({ onUnhandledRequest: 'bypass' })
-  }
+  const { worker } = await import('./api/server')
+  return worker.start({
+    onUnhandledRequest: 'bypass',
+    serviceWorker: {
+      // 👇 مسیر مطلق با base
+      url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
+    },
+  })
 }
 
 enableMocking().then(() => {

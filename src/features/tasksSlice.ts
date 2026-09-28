@@ -1,4 +1,4 @@
-import { createAsyncThunk, createEntityAdapter, createSlice, type EntityState } from "@reduxjs/toolkit"
+import { createEntityAdapter, createSlice, type EntityState } from "@reduxjs/toolkit"
 import { client } from "../api/client"
 import type { RootState } from "../app/store"
 import { createAppAsyncThunk } from "../app/createAppAsyncThunk"
@@ -21,8 +21,10 @@ export interface Task {
   todos: Todo[]
 }
 
+const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, '') 
+
 export const fetchTasks = createAppAsyncThunk('tasks/fetchTasks', async () => {
-  const response = await client.get<Task[]>('/fakeApi/tasks')
+  const response = await client.get<Task[]>(`${API_BASE}/fakeApi/tasks`)
   return response.data
 })
 
@@ -44,7 +46,7 @@ const todosSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      .addCase(fetchTasks.pending, (state, action) => {
+      .addCase(fetchTasks.pending, (state) => {
         state.status = 'pending'
       })
       .addCase(fetchTasks.fulfilled, (state, action) => {
