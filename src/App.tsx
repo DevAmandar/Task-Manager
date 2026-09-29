@@ -5,15 +5,15 @@ import { Task } from './features/Task'
 
 function App() {
   return (
-    <>
+    <div className='gap-1 m-5'>
       <BrowserRouter basename="/Task-Manager/">
-      <h1>hello world</h1>
+      <h1>navbar</h1>
         <Routes>
           <Route path="/" element={<TasksPage />} />
           <Route path="/tasks/:tasksId" element={<Task />} />
         </Routes>
       </BrowserRouter>
-    </>
+    </div>
   )
 }
 

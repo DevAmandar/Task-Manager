@@ -14,6 +14,7 @@ export const db = factory({
   task: {
     id: primaryKey(Number),
     title: String,
+    description: String,
     todos: manyOf('todo'),
   },
   todo: {
@@ -35,6 +36,7 @@ const initialTasks = [
   {
     id: 111,
     title: 'task 1',
+    description: 'description task 1',
     todos: [
       {
         id: 1,
@@ -57,6 +59,7 @@ const initialTasks = [
   {
     id: 222,
     title: 'task 2',
+    description: 'description task 2',
     todos: [
       {
         id: 3,   // 👈 یکتا (نه 1)
@@ -85,6 +88,7 @@ function seedDB() {
     const task = db.task.create({
       id: taskData.id,
       title: taskData.title,
+      description: taskData.description,
     })
 
     const todos: ReturnType<typeof db.todo.create>[] = []
@@ -139,6 +143,7 @@ type TaskModel = ReturnType<typeof db.task.create>
 const serializeTask = (task: TaskModel) => ({
   id: task.id,
   title: task.title,
+  description: task.description,  
   todos: task.todos.map((todo) => ({
     id: todo.id,
     title: todo.title,

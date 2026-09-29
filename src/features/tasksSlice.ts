@@ -5,19 +5,20 @@ import { createAppAsyncThunk } from "../app/createAppAsyncThunk"
 
 
 export interface TodoItem {
-  id: number
+  id: string
   description: string
 }
 
 export interface Todo {
-  id: number
+  id: string
   title: string
   items: TodoItem[]
 }
 
 export interface Task {
-  id: number
+  id: string
   title: string
+  description: string
   todos: Todo[]
 }
 
@@ -28,7 +29,7 @@ export const fetchTasks = createAppAsyncThunk('tasks/fetchTasks', async () => {
   return response.data
 })
 
-interface TasksState extends EntityState<Task, number> {
+interface TasksState extends EntityState<Task, string> {
   status: 'idle' | 'pending' | 'succeeded' | 'rejected'
   error: string | null
 }
