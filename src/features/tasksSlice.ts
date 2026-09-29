@@ -61,12 +61,12 @@ const todosSlice = createSlice({
   },
 })
 
-export const selectTodosStatus = (state: RootState) => state.tasks.status
+export const selectTasksStatus = (state: RootState) => state.tasks.status
 
 export const {
-  selectAll: selectAllTodos,
-  selectById: selectTodoById,
-  selectIds: selectTodoIds,
+  selectAll: selectAllTasks,
+  selectById: selectTaskById,
+  selectIds: selectTaskIds,
 } = tasksAdapter.getSelectors((state: RootState) => state.tasks)
 
 export default todosSlice.reducer

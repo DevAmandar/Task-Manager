@@ -2,12 +2,12 @@ import { useEffect } from 'react'
 
 import { useAppSelector, useAppDispatch } from '../app/hooks'
 
-import { fetchTasks, selectAllTodos, selectTodosStatus } from './tasksSlice'
+import { fetchTasks, selectAllTasks, selectTasksStatus } from './tasksSlice'
 
 export const Todos = () => {
     const dispatch = useAppDispatch()
-    const tasks = useAppSelector(selectAllTodos)
-    const tasksStatus = useAppSelector(selectTodosStatus)
+    const tasks = useAppSelector(selectAllTasks)
+    const tasksStatus = useAppSelector(selectTasksStatus)
 
     useEffect(() => {
         if (tasksStatus === 'idle') {
