@@ -1,31 +1,28 @@
 import { useEffect } from "react"
 import { useAppDispatch, useAppSelector } from "../app/hooks"
-import { fetchTasks, selectAllTasks, selectTasksStatus } from "../features/tasksSlice"
-import { Link } from "react-router"
+import { fetchTasks, selectAllTaskIds } from "../features/tasksSlice"
+import { TaskCard } from "./TaskCard"
 
 export const TasksPage = () => {
 
     const dispatch = useAppDispatch()
-    const tasks = useAppSelector(selectAllTasks)
-    const tasksStatus = useAppSelector(selectTasksStatus)
+    const taskIds = useAppSelector(selectAllTaskIds)
+    const fetchStatus = useAppSelector((state) => state.tasks.fetchStatus)
 
     useEffect(() => {
-        if (tasksStatus === 'idle') {
+        if (fetchStatus === 'idle') {
             dispatch(fetchTasks())
         }
-    }, [tasksStatus, dispatch])
+    }, [fetchStatus, dispatch])
 
-    if (tasksStatus === 'pending') return <p>Loading…</p>
-    if (tasksStatus === 'rejected') return <p>Error loading todos</p>
+    if (fetchStatus === 'pending') return <p>Loading…</p>
+    if (fetchStatus === 'rejected') return <p>Error loading todos</p>
 
     return (
         <>
-            <div className="flex gap-1.5" >
-                {tasks.map(task => (
-                    <div className="border-2 w-[220px]" key={task.id}>
-                        <Link to={`/tasks/${task.id}`} className="border-b-2 text-center w-full block"> {task.title} </Link>
-                        <p className="p-3">{task.description}</p>
-                    </div>
+            <div className="flex gap-1.5">
+                {taskIds.map((id) => (
+                    <TaskCard key={id} taskId={id} />
                 ))}
             </div>
         </>

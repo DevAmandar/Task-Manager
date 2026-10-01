@@ -1,5 +1,5 @@
 import type React from "react"
-import { useAppDispatch } from "../app/hooks"
+import { useAppDispatch, useAppSelector } from "../app/hooks"
 import { addTask } from "../features/tasksSlice"
 
 type Props = {
@@ -19,6 +19,7 @@ interface AddTaskFormElements extends HTMLFormElement {
 export const Modal = ({ title, modalRef }: Props) => {
 
     const dispatch = useAppDispatch()
+    const addStatus = useAppSelector(state => state.tasks.addStatus)
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 
@@ -68,7 +69,7 @@ export const Modal = ({ title, modalRef }: Props) => {
                 </div>
                 <div className="mb-1 flex justify-center items-center gap-1.5">
                     <button type="submit" className="border-2 p-1.5 cursor-pointer">
-                        Submit
+                        { addStatus=== 'pending' ? 'Adding...' : 'Submit'}
                     </button>
                     <button
                         type="button"

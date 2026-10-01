@@ -41,14 +41,16 @@ export const addTask = createAppAsyncThunk(
 )
 
 interface TasksState extends EntityState<Task, string> {
-  status: 'idle' | 'pending' | 'succeeded' | 'rejected'
+  fetchStatus: 'idle' | 'pending' | 'succeeded' | 'rejected'
+  addStatus: 'idle' | 'pending' | 'succeeded' | 'rejected'
   error: string | null
 }
 
 const tasksAdapter = createEntityAdapter<Task>({})
 
 const initialState: TasksState = tasksAdapter.getInitialState({
-  status: 'idle',
+  fetchStatus: 'idle',
+  addStatus: 'idle',
   error: null,
 })
 
@@ -59,23 +61,23 @@ const tasksSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchTasks.pending, (state) => {
-        state.status = 'pending'
+        state.fetchStatus = 'pending'
       })
       .addCase(fetchTasks.fulfilled, (state, action) => {
-        state.status = 'succeeded'
+        state.fetchStatus = 'succeeded'
         // Save the fetched posts into state
         tasksAdapter.setAll(state, action.payload)
       })
       .addCase(fetchTasks.rejected, (state, action) => {
-        state.status = 'rejected'
+        state.fetchStatus = 'rejected'
         state.error = action.error.message ?? 'Unknown Error'
       })
       .addCase(addTask.pending, (state) => {
-        state.status = 'pending'
+        state.addStatus = 'pending'
       })
       .addCase(addTask.fulfilled, (state, action) => {
         tasksAdapter.addOne(state, action.payload)
-        state.status = 'succeeded'
+        state.addStatus = 'succeeded'
       })
       .addCase(addTask.rejected, (state, action) => {
         state.error = action.error.message ?? 'Failed to add task'
@@ -83,12 +85,12 @@ const tasksSlice = createSlice({
   },
 })
 
-export const selectTasksStatus = (state: RootState) => state.tasks.status
+// export const selectTasksStatus = (state: RootState) => state.tasks.status
 
 export const {
   selectAll: selectAllTasks,
   selectById: selectTaskById,
-  selectIds: selectTaskIds,
+  selectIds: selectAllTaskIds,
 } = tasksAdapter.getSelectors((state: RootState) => state.tasks)
 
 export default tasksSlice.reducer
