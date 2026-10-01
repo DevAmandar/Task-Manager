@@ -12,7 +12,7 @@ const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, '')
 
 export const db = factory({
   task: {
-    id: primaryKey(Number),
+    id: primaryKey(String),
     title: String,
     description: String,
     todos: manyOf('todo'),
@@ -30,11 +30,11 @@ export const db = factory({
   },
 })
 
-/* ------------------ Seed Data (از JSON ثابت) ------------------ */
+/* ------------------ Seed Data ------------------ */
 
 const initialTasks = [
   {
-    id: 111,
+    id: '111',
     title: 'task 1',
     description: 'description task 1',
     todos: [
@@ -57,20 +57,20 @@ const initialTasks = [
     ],
   },
   {
-    id: 222,
+    id: '222',
     title: 'task 2',
     description: 'description task 2',
     todos: [
       {
-        id: 3,   // 👈 یکتا (نه 1)
+        id: 3,
         title: 'todo 1',
         items: [
-          { id: 31, description: 'work 1' },   // 👈 یکتا (نه 11)
+          { id: 31, description: 'work 1' },
           { id: 32, description: 'work 2' },
         ],
       },
       {
-        id: 4,   // 👈 یکتا (نه 2)
+        id: 4,
         title: 'todo 2',
         items: [
           { id: 33, description: 'work 3' },
@@ -143,7 +143,7 @@ type TaskModel = ReturnType<typeof db.task.create>
 const serializeTask = (task: TaskModel) => ({
   id: task.id,
   title: task.title,
-  description: task.description,  
+  description: task.description,
   todos: task.todos.map((todo) => ({
     id: todo.id,
     title: todo.title,
@@ -165,12 +165,38 @@ export const handlers = [
   }),
 
   // دریافت یک Task خاص
+  // 👈 id الان string هست، پس Number() نمی‌کنیم
   http.get(`${API_BASE}/fakeApi/tasks/:taskId`, async ({ params }) => {
-    const taskId = Number(params.taskId)
+    const taskId = params.taskId as string
     const task = db.task.findFirst({ where: { id: { equals: taskId } } })
     if (!task) return new HttpResponse(null, { status: 404 })
     await delay(ARTIFICIAL_DELAY_MS)
     return HttpResponse.json(serializeTask(task))
+  }),
+
+  // ساخت Task جدید
+  http.post(`${API_BASE}/fakeApi/tasks`, async ({ request }) => {
+    const data = (await request.json()) as {
+      title: string
+      description: string
+    }
+
+    // 👈 بزرگ‌ترین id رو با Number حساب کن، بعد string کن
+    const allTasks = db.task.getAll()
+    const maxId = allTasks.reduce(
+      (max, t) => Math.max(max, Number(t.id)),
+      0,
+    )
+    const newId = String(maxId + 1)
+
+    const newTask = db.task.create({
+      id: newId,
+      title: data.title,
+      description: data.description,
+    })
+
+    await delay(ARTIFICIAL_DELAY_MS)
+    return HttpResponse.json(serializeTask(newTask), { status: 201 })
   }),
 ]
 

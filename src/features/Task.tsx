@@ -5,7 +5,9 @@ import { selectTaskById } from "./tasksSlice"
 export const Task = () => {
 
     const { tasksId } = useParams()
-    const task = useAppSelector(state => selectTaskById(state, tasksId!))
+    const task = useAppSelector(state =>
+        tasksId ? selectTaskById(state, tasksId!) : undefined)
+    if (!task) return <p>Task not Found</p>
     return (
         <div className="">
             <div className="flex gap-1.5">

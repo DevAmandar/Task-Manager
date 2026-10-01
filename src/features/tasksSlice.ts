@@ -22,12 +22,23 @@ export interface Task {
   todos: Todo[]
 }
 
-const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, '') 
+const API_BASE = import.meta.env.BASE_URL.replace(/\/$/, '')
 
 export const fetchTasks = createAppAsyncThunk('tasks/fetchTasks', async () => {
   const response = await client.get<Task[]>(`${API_BASE}/fakeApi/tasks`)
   return response.data
 })
+
+export const addTask = createAppAsyncThunk(
+  'tasks/addTask',
+  async (payload: { title: string; description: string }) => {
+    const response = await client.post<Task>(
+      `${API_BASE}/fakeApi/tasks`,
+      payload,
+    )
+    return response.data
+  }
+)
 
 interface TasksState extends EntityState<Task, string> {
   status: 'idle' | 'pending' | 'succeeded' | 'rejected'
@@ -41,7 +52,7 @@ const initialState: TasksState = tasksAdapter.getInitialState({
   error: null,
 })
 
-const todosSlice = createSlice({
+const tasksSlice = createSlice({
   name: 'tasks',
   initialState,
   reducers: {},
@@ -59,6 +70,16 @@ const todosSlice = createSlice({
         state.status = 'rejected'
         state.error = action.error.message ?? 'Unknown Error'
       })
+      .addCase(addTask.pending, (state) => {
+        state.status = 'pending'
+      })
+      .addCase(addTask.fulfilled, (state, action) => {
+        tasksAdapter.addOne(state, action.payload)
+        state.status = 'succeeded'
+      })
+      .addCase(addTask.rejected, (state, action) => {
+        state.error = action.error.message ?? 'Failed to add task'
+      })
   },
 })
 
@@ -70,4 +91,4 @@ export const {
   selectIds: selectTaskIds,
 } = tasksAdapter.getSelectors((state: RootState) => state.tasks)
 
-export default todosSlice.reducer
+export default tasksSlice.reducer
