@@ -198,6 +198,34 @@ export const handlers = [
     await delay(ARTIFICIAL_DELAY_MS)
     return HttpResponse.json(serializeTask(newTask), { status: 201 })
   }),
+
+  // حذف Task
+  http.delete(`${API_BASE}/fakeApi/tasks/:taskId`, async ({ params }) => {
+    const taskId = params.taskId as string
+    const task = db.task.findFirst({ where: { id: { equals: taskId } } })
+
+    if (!task) {
+      await delay(ARTIFICIAL_DELAY_MS)
+      return new HttpResponse(null, { status: 404 })
+    }
+
+    // 👈 serialize قبل از حذف، چون بعدش task دیگه تو DB نیست
+    const serialized = serializeTask(task)
+
+    // حذف item ها و todo ها (تمیزکاری)
+    for (const todo of task.todos) {
+      for (const item of todo.items) {
+        db.item.delete({ where: { id: { equals: item.id } } })
+      }
+      db.todo.delete({ where: { id: { equals: todo.id } } })
+    }
+
+    // حذف خود task
+    db.task.delete({ where: { id: { equals: taskId } } })
+
+    await delay(ARTIFICIAL_DELAY_MS)
+    return HttpResponse.json(serialized)
+  }),
 ]
 
 /* ------------------ Server ------------------ */

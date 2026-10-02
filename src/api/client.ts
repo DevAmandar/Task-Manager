@@ -50,6 +50,10 @@ client.post = function <T>(endpoint: string, body: any, customConfig: Partial<Re
   return client<T>(endpoint, { ...customConfig, body })
 }
 
+client.delete = function <T>(endpoint: string, customConfig: Partial<RequestInit> = {}) {
+  return client<T>(endpoint, { ...customConfig, method: 'DELETE' })
+}
+
 /* ------------------ Usage Example ------------------ */
 
 // import type { Todo } from './types'
