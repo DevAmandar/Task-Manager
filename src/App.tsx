@@ -2,8 +2,8 @@ import { BrowserRouter, Route, Routes } from 'react-router'
 import './App.css'
 import { TasksPage } from './component/TasksPage'
 import { Task } from './features/Task'
-import { Modal } from './component/Modal'
 import { useRef } from 'react'
+import { AddTaskModal } from './component/modals/AddTaskModal'
 
 function App() {
 
@@ -23,7 +23,7 @@ function App() {
           <Route path="/" element={<TasksPage />} />
           <Route path="/tasks/:tasksId" element={<Task />} />
         </Routes>
-        <Modal title='add task' modalRef={modalRef} />
+        <AddTaskModal modalRef={modalRef} />
       </BrowserRouter>
     </div>
   )

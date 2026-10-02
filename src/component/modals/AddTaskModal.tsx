@@ -1,9 +1,9 @@
 import type React from "react"
-import { useAppDispatch, useAppSelector } from "../app/hooks"
-import { addTask } from "../features/tasksSlice"
+import { useAppDispatch, useAppSelector } from "../../app/hooks"
+import { addTask } from "../../features/tasksSlice"
+import { Modal } from "./Modal"
 
 type Props = {
-    title: string
     modalRef: React.RefObject<HTMLDialogElement | null>
 }
 
@@ -16,7 +16,7 @@ interface AddTaskFormElements extends HTMLFormElement {
     readonly elements: AddTaskFormFields
 }
 
-export const Modal = ({ title, modalRef }: Props) => {
+export const AddTaskModal = ({ modalRef }: Props) => {
 
     const dispatch = useAppDispatch()
     const addStatus = useAppSelector(state => state.tasks.addStatus)
@@ -47,8 +47,7 @@ export const Modal = ({ title, modalRef }: Props) => {
     }
 
     return (
-        <dialog ref={modalRef} className="m-auto border-2">
-            <h1 className="border-b-2 text-center">{title}</h1>
+        <Modal title="Add Task" modalRef={modalRef}>
             <form onSubmit={handleSubmit} >
                 <div className="flex flex-col p-2.5">
                     <label htmlFor="taskTitle">Title</label>
@@ -69,7 +68,7 @@ export const Modal = ({ title, modalRef }: Props) => {
                 </div>
                 <div className="mb-1 flex justify-center items-center gap-1.5">
                     <button type="submit" className="border-2 p-1.5 cursor-pointer">
-                        { addStatus=== 'pending' ? 'Adding...' : 'Submit'}
+                        {addStatus === 'pending' ? 'Adding...' : 'Submit'}
                     </button>
                     <button
                         type="button"
@@ -80,6 +79,6 @@ export const Modal = ({ title, modalRef }: Props) => {
                     </button>
                 </div>
             </form>
-        </dialog>
+        </Modal>
     )
 }
