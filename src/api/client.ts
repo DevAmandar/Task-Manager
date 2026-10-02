@@ -54,6 +54,11 @@ client.delete = function <T>(endpoint: string, customConfig: Partial<RequestInit
   return client<T>(endpoint, { ...customConfig, method: 'DELETE' })
 }
 
+// ------------------ EDIT (NEW) ------------------
+client.patch = function <T>(endpoint: string, body: any, customConfig: Partial<RequestInit> = {}) {
+  return client<T>(endpoint, { ...customConfig, body, method: 'PATCH' })
+}
+
 /* ------------------ Usage Example ------------------ */
 
 // import type { Todo } from './types'

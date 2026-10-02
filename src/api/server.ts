@@ -226,6 +226,34 @@ export const handlers = [
     await delay(ARTIFICIAL_DELAY_MS)
     return HttpResponse.json(serialized)
   }),
+
+  // ------------------ EDIT ------------------
+  http.patch(`${API_BASE}/fakeApi/tasks/:taskId`, async ({ request, params }) => {
+    const taskId = params.taskId as string
+    const data = (await request.json()) as {
+      title?: string
+      description?: string
+    }
+
+    // چک کن task وجود داره
+    const task = db.task.findFirst({ where: { id: { equals: taskId } } })
+    if (!task) {
+      await delay(ARTIFICIAL_DELAY_MS)
+      return new HttpResponse(null, { status: 404 })
+    }
+
+    // فقط فیلدهایی که اومدن رو آپدیت کن
+    const updated = db.task.update({
+      where: { id: { equals: taskId } },
+      data: {
+        ...(data.title !== undefined && { title: data.title }),
+        ...(data.description !== undefined && { description: data.description }),
+      },
+    })!
+
+    await delay(ARTIFICIAL_DELAY_MS)
+    return HttpResponse.json(serializeTask(updated))
+  }),
 ]
 
 /* ------------------ Server ------------------ */

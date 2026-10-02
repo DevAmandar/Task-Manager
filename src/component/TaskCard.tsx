@@ -1,13 +1,16 @@
-import { memo, useState } from 'react'
+import { memo, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
 import { deleteTask, selectDeleteStatus, selectTaskById } from '../features/tasksSlice'
+import { EditTaskModal } from './modals/EditTaskModal'
 
 interface TaskCardProps {
     taskId: string
 }
 
 export const TaskCard = memo(({ taskId }: TaskCardProps) => {
+
+    const modalRef = useRef<HTMLDialogElement>(null)
 
     const task = useAppSelector((state) => selectTaskById(state, taskId))
     const dispatch = useAppDispatch()
@@ -23,6 +26,9 @@ export const TaskCard = memo(({ taskId }: TaskCardProps) => {
         }
     }
 
+    const showModal = () => {
+        modalRef.current?.showModal()
+    }
     if (!task) return null
 
     return (
@@ -31,9 +37,13 @@ export const TaskCard = memo(({ taskId }: TaskCardProps) => {
                 <Link to={`/tasks/${taskId}`}>
                     {task.title}
                 </Link>
-                <button onClick={handleDeleteTaskKard} className='cursor-pointer'> {isDeleting ? 'Deleting...' : 'Delete'} </button>
+                <div className='flex items-center gap-4'>
+                    <button onClick={handleDeleteTaskKard} className='cursor-pointer'> {isDeleting ? 'Deleting...' : 'Delete'} </button>
+                    <button onClick={showModal}>Edit</button>
+                </div>
             </div>
             <p className="p-3">{task.description}</p>
+            <EditTaskModal modalRef={modalRef} taskId={taskId}/>
         </div>
     )
 })
